@@ -3,193 +3,210 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Special Surprise</title>
+    <title>A Sky Full of Stars</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --pink: #ffe4e1; --brown: #c3a683; --dark-brown: #8b6d4d; }
+        :root { --pink: #ffe4e1; --dark: #333; }
         body {
             background-color: var(--pink);
             margin: 0; height: 100vh;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            font-family: 'Georgia', serif;
-            overflow: hidden; transition: background 0.8s ease;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden; transition: background 1s ease;
         }
-
-        /* Envelope Styling */
-        #envelope-wrapper { position: relative; cursor: pointer; z-index: 100; transition: 0.5s; }
-        .envelope {
-            width: 280px; height: 180px;
-            background: var(--brown);
-            border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
-            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-        }
-        .envelope::before {
-            content: ''; position: absolute; top: 0;
-            border-left: 140px solid transparent; border-right: 140px solid transparent;
-            border-top: 100px solid var(--dark-brown);
-        }
-        .seal {
-            position: absolute; top: 80px; left: 120px;
-            width: 40px; height: 40px; background: #b22222;
-            border-radius: 50%; border: 2px solid #8b0000;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-        }
-
-        /* Hidden Main Content */
-        #main-content { display: none; flex-direction: column; align-items: center; width: 100%; }
 
         /* Interactive Stars */
-        .star { position: absolute; width: 6px; height: 6px; border-radius: 50%; z-index: 1; transition: transform 0.2s ease-out; }
+        #star-canvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%; z-index: 1;
+            pointer-events: none;
+        }
 
-        #question { font-size: 28px; color: red; font-weight: bold; margin-bottom: 30px; z-index: 10; text-align: center; padding: 0 20px;}
+        /* Clouds */
+        .cloud {
+            position: absolute; background: white;
+            width: 120px; height: 40px; border-radius: 50px;
+            top: 10%; opacity: 0.8;
+            animation: moveClouds 25s linear infinite;
+            z-index: 2; transition: background 1s;
+        }
+        .cloud::after, .cloud::before {
+            content: ''; position: absolute; background: inherit;
+            width: 60px; height: 60px; border-radius: 50%; top: -25px; left: 20px;
+        }
+
+        #question {
+            font-size: 28px; color: red; font-weight: bold;
+            position: absolute; top: 15%; width: 85%;
+            text-align: center; z-index: 10;
+        }
 
         .container { display: flex; gap: 20px; z-index: 10; }
+
         button {
-            padding: 15px 35px; font-size: 20px; border-radius: 15px; border: none;
-            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 15px 35px; font-size: 20px; border: none;
+            border-radius: 15px; cursor: pointer;
+            transition: transform 0.2s;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
+
         #yesBtn { background-color: #4CAF50; color: white; }
         #noBtn { background-color: #f44336; color: white; position: relative; }
 
-        /* Countdown */
-        #timer { margin-top: 40px; font-size: 18px; color: #555; font-weight: bold; background: rgba(255,255,255,0.4); padding: 10px 20px; border-radius: 20px; }
-
-        /* Floating Hearts */
-        .heart { position: absolute; bottom: -50px; font-size: 24px; animation: floatUp 4s linear forwards; z-index: 15; }
-        @keyframes floatUp {
-            to { transform: translateY(-110vh) translateX(100px); opacity: 0; }
+        /* Final UI */
+        #finalContent {
+            display: none; z-index: 10; text-align: center;
+        }
+        #countdown {
+            margin-top: 20px; font-size: 22px; color: #d81b60; font-weight: bold;
+            background: rgba(255,255,255,0.5); padding: 10px 20px; border-radius: 20px;
         }
 
-        /* Weather Effects */
-        .rain { position: absolute; width: 2px; height: 20px; background: rgba(255,255,255,0.4); animation: fall 0.4s linear infinite; z-index: 5; }
+        /* Floating Hearts */
+        .heart-float {
+            position: absolute; bottom: -50px;
+            font-size: 24px; animation: floatUp 4s linear forwards;
+            z-index: 8;
+        }
+        @keyframes floatUp {
+            to { transform: translateY(-110vh) translateX(50px); opacity: 0; }
+        }
+
+        /* Weather */
+        .rain { position: absolute; width: 2px; height: 20px; background: white; top: -20px; animation: fall 0.4s linear infinite; z-index: 5; }
         @keyframes fall { to { transform: translateY(100vh); } }
-        .lightning { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; z-index: 20; pointer-events: none; }
-        .flash { animation: flashAnim 0.15s ease-out; }
-        @keyframes flashAnim { 0% { opacity: 0; } 50% { opacity: 0.9; } 100% { opacity: 0; } }
+        @keyframes moveClouds { from { left: -200px; } to { left: 100%; } }
     </style>
 </head>
 <body>
 
-    <audio id="yesMusic" src="Coldplay - A Sky Full Of Stars (Official Video).mp3"></audio> <div id="envelope-wrapper" onclick="openEnvelope()">
-        <p style="text-align: center; color: var(--dark-brown); font-weight: bold;">Tap to open your invite</p>
-        <div class="envelope"><div class="seal"></div></div>
+    <canvas id="star-canvas"></canvas>
+
+    <audio id="romanticMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"></audio>
+    <audio id="noMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+    <audio id="yesMusic" loop src="Coldplay - A Sky Full Of Stars (Official Video).mp3"></audio>
+
+    <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
+
+    <div class="container" id="btnContainer">
+        <button id="yesBtn">Yes</button>
+        <button id="noBtn">No</button>
     </div>
 
-    <div id="main-content">
-        <div id="lightning" class="lightning"></div>
-        <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
-
-        <div class="container" id="btnContainer">
-            <button id="yesBtn">Yes</button>
-            <button id="noBtn">No</button>
-        </div>
-
-        <div id="finalMessage" style="display:none; text-align: center;">
-            <h2 style="color: #d81b60;">I Knew you would say yes🥰</h2>
-            <p style="font-size: 24px; font-weight: bold;">You just made me the happiest person💕</p>
-            <p style="font-size: 20px; color: #333;">Be ready at 7:00 pm SHARP & Wear a nice dress</p>
-        </div>
-
-        <div id="timer">Countdown to our date: Loading...</div>
+    <div id="finalContent">
+        <h2 style="color: #d81b60; font-size: 28px;">I Knew you would say yes🥰</h2>
+        <p style="font-size: 22px; color: #333;">You just made me the happiest person 💕<br>
+        <strong>Be ready at 7:00 pm SHARP & Wear a nice dress</strong></p>
+        <div id="countdown">Loading timer...</div>
     </div>
 
     <script>
         const yesBtn = document.getElementById('yesBtn');
         const noBtn = document.getElementById('noBtn');
+        const question = document.getElementById('question');
+        const finalContent = document.getElementById('finalContent');
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        
+        const romanticMusic = document.getElementById('romanticMusic');
+        const noMusic = document.getElementById('noMusic');
         const yesMusic = document.getElementById('yesMusic');
+
+        let noCount = 0;
+        let scale = 1;
+
+        // Resize Canvas
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Star logic
+        let stars = [];
         const starColors = ['#000000', '#FFFF00', '#008000', '#0000FF', '#FF00FF', '#FFA500'];
-        const stars = [];
-
-        // 1. Interactive Stars Setup
-        for (let i = 0; i < 100; i++) {
-            let star = document.createElement('div');
-            star.className = 'star';
-            star.style.left = Math.random() * 100 + 'vw';
-            star.style.top = Math.random() * 100 + 'vh';
-            star.style.backgroundColor = starColors[Math.floor(Math.random() * starColors.length)];
-            document.body.appendChild(star);
-            stars.push({ el: star, x: parseFloat(star.style.left), y: parseFloat(star.style.top) });
-        }
-
-        document.addEventListener('mousemove', (e) => {
-            stars.forEach(star => {
-                const dx = e.clientX - (star.el.offsetLeft);
-                const dy = e.clientY - (star.el.offsetTop);
-                const dist = Math.sqrt(dx*dx + dy*dy);
-                if (dist < 100) {
-                    star.el.style.transform = `translate(${-dx/2}px, ${-dy/2}px)`;
-                } else {
-                    star.el.style.transform = `translate(0,0)`;
-                }
+        for(let i=0; i<150; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 3,
+                color: starColors[Math.floor(Math.random()*starColors.length)],
+                speed: Math.random() * 0.5
             });
-        });
-
-        // 2. Open Envelope Function
-        function openEnvelope() {
-            document.getElementById('envelope-wrapper').style.display = 'none';
-            document.getElementById('main-content').style.display = 'flex';
         }
 
-        // 3. Countdown Timer Logic
-        const targetDate = new Date("March 28, 2026 19:00:00").getTime();
-        setInterval(() => {
+        function animateStars() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            stars.forEach(s => {
+                ctx.fillStyle = s.color;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+                ctx.fill();
+                s.y += s.speed;
+                if(s.y > canvas.height) s.y = 0;
+            });
+            requestAnimationFrame(animateStars);
+        }
+        animateStars();
+
+        // Start initial music
+        document.body.addEventListener('click', () => {
+            if(noCount === 0 && finalContent.style.display === 'none') romanticMusic.play();
+        }, {once: true});
+
+        // Floating Hearts
+        function spawnHeart() {
+            const hearts = ['💘','♥','💖'];
+            const heart = document.createElement('div');
+            heart.className = 'heart-float';
+            heart.innerText = hearts[Math.floor(Math.random()*hearts.length)];
+            heart.style.left = Math.random() * 100 + 'vw';
+            document.body.appendChild(heart);
+            setTimeout(() => heart.remove(), 4000);
+        }
+
+        // Countdown Timer Logic
+        function updateCountdown() {
+            const target = new Date("March 28, 2026 19:00:00").getTime();
             const now = new Date().getTime();
-            const diff = targetDate - now;
+            const diff = target - now;
+
             const d = Math.floor(diff / (1000 * 60 * 60 * 24));
             const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
             const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
             const s = Math.floor((diff % (1000 * 60)) / 1000);
-            document.getElementById('timer').innerHTML = `Countdown: ${d}d ${h}h ${m}m ${s}s`;
-        }, 1000);
 
-        // 4. No Button Interaction
-        let noCount = 0;
-        let scale = 1;
+            document.getElementById('countdown').innerHTML = `Time remaining: ${d}d ${h}h ${m}m ${s}s`;
+        }
+
         noBtn.addEventListener('click', () => {
             noCount++;
+            romanticMusic.pause();
+            noMusic.play();
             document.body.style.backgroundColor = "#444";
-            if(noCount === 1) noBtn.innerText = "Are you sure?😕";
-            
-            // Move No, Grow Yes
-            noBtn.style.position = 'absolute';
-            noBtn.style.left = Math.random() * (window.innerWidth - 150) + 'px';
-            noBtn.style.top = Math.random() * (window.innerHeight - 150) + 'px';
-            scale += 0.5;
-            yesBtn.style.transform = `scale(${scale})`;
-            
-            // Lightning & Rain
-            document.getElementById('lightning').classList.add('flash');
-            setTimeout(() => document.getElementById('lightning').classList.remove('flash'), 150);
-            for(let i=0; i<30; i++){
+            for(let i=0; i<10; i++) {
                 let drop = document.createElement('div');
                 drop.className = 'rain';
                 drop.style.left = Math.random() * 100 + 'vw';
                 document.body.appendChild(drop);
-                setTimeout(() => drop.remove(), 1500);
+                setTimeout(() => drop.remove(), 1000);
             }
+            if(noCount === 1) noBtn.innerText = "Are you sure?😕";
+            noBtn.style.position = 'absolute';
+            noBtn.style.left = Math.random() * (window.innerWidth - 100) + 'px';
+            noBtn.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+            scale += 0.5;
+            yesBtn.style.transform = `scale(${scale})`;
         });
 
-        // 5. Yes Button Interaction
         yesBtn.addEventListener('click', () => {
-            yesMusic.play(); // Playing the uploaded Coldplay track
-            document.getElementById('btnContainer').style.display = 'none';
-            document.getElementById('question').style.display = 'none';
-            document.getElementById('finalMessage').style.display = 'block';
+            noMusic.pause(); romanticMusic.pause();
+            yesMusic.play();
             document.body.style.backgroundColor = var(--pink);
-
-            // Floating Hearts Effect
-            const heartTypes = ['💘','♥','💖'];
-            setInterval(() => {
-                let h = document.createElement('div');
-                h.className = 'heart';
-                h.innerHTML = heartTypes[Math.floor(Math.random()*3)];
-                h.style.left = Math.random() * 100 + 'vw';
-                document.body.appendChild(h);
-                setTimeout(() => h.remove(), 4000);
-            }, 300);
-
-            // Confetti
+            document.getElementById('btnContainer').style.display = 'none';
+            question.style.display = 'none';
+            finalContent.style.display = 'block';
+            setInterval(spawnHeart, 300);
+            setInterval(updateCountdown, 1000);
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         });
     </script>
