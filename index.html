@@ -6,71 +6,45 @@
     <title>A Special Birthday Question</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root {
-            --bg-color: #ffe4e1;
-        }
+        :root { --bg-color: #ffe4e1; }
         body {
             background-color: var(--bg-color);
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            margin: 0; height: 100vh;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
             font-family: 'Arial', sans-serif;
-            overflow: hidden;
-            transition: background 0.5s ease;
+            overflow: hidden; transition: background 0.8s ease;
         }
 
         /* Clouds */
         .cloud {
-            position: absolute;
-            background: white;
-            width: 100px; height: 30px;
-            border-radius: 50px;
-            top: 50px;
-            opacity: 0.8;
-            animation: moveClouds 20s linear infinite;
+            position: absolute; background: white;
+            width: 120px; height: 40px; border-radius: 50px;
+            top: 50px; opacity: 0.8;
+            animation: moveClouds 25s linear infinite;
+            z-index: 2;
         }
         .cloud::after, .cloud::before {
-            content: ''; position: absolute; background: white;
-            width: 50px; height: 50px; border-radius: 50%; top: -20px; left: 15px;
+            content: ''; position: absolute; background: inherit;
+            width: 60px; height: 60px; border-radius: 50%; top: -25px; left: 20px;
         }
-        .cloud::after { width: 40px; height: 40px; top: -15px; left: 45px; }
-
-        @keyframes moveClouds {
-            from { left: -150px; }
-            to { left: 100%; }
-        }
+        .cloud::after { width: 50px; height: 50px; top: -20px; left: 55px; }
 
         /* Stars */
-        .star {
-            position: absolute;
-            width: 4px; height: 4px;
-            border-radius: 50%;
-            z-index: -1;
-        }
+        .star { position: absolute; width: 5px; height: 5px; border-radius: 50%; z-index: 1; }
 
         #question {
-            font-size: 28px;
-            color: red;
-            font-weight: bold;
-            position: absolute;
-            top: 20%;
-            width: 80%;
-            text-align: center;
-            z-index: 10;
+            font-size: 28px; color: red; font-weight: bold;
+            position: absolute; top: 15%; width: 85%;
+            text-align: center; z-index: 10;
         }
 
         .container { display: flex; gap: 20px; z-index: 10; }
 
         button {
-            padding: 15px 35px;
-            font-size: 20px;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: transform 0.2s;
+            padding: 15px 35px; font-size: 20px; border: none;
+            border-radius: 15px; cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
 
@@ -78,36 +52,33 @@
         #noBtn { background-color: #f44336; color: white; position: relative; }
 
         #finalMessage {
-            display: none;
-            font-size: 24px;
-            color: #d81b60;
-            font-weight: bold;
-            z-index: 10;
+            display: none; font-size: 24px; color: #d81b60;
+            font-weight: bold; z-index: 10; line-height: 1.6;
         }
 
-        /* Rain & Lightning */
+        /* Weather Effects */
         .rain {
-            position: absolute;
-            width: 2px; height: 15px;
-            background: rgba(255, 255, 255, 0.6);
-            top: -20px;
-            animation: fall 0.5s linear infinite;
+            position: absolute; width: 2px; height: 20px;
+            background: rgba(255, 255, 255, 0.4);
+            top: -20px; animation: fall 0.4s linear infinite; z-index: 5;
         }
         @keyframes fall { to { transform: translateY(100vh); } }
 
+        @keyframes moveClouds { from { left: -200px; } to { left: 100%; } }
+
         .lightning {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; opacity: 0; z-index: 5; pointer-events: none;
+            background: white; opacity: 0; z-index: 6; pointer-events: none;
         }
-        .flash { animation: flashAnim 0.2s ease-out; }
-        @keyframes flashAnim { 0% { opacity: 0; } 50% { opacity: 0.8; } 100% { opacity: 0; } }
+        .flash { animation: flashAnim 0.15s ease-out; }
+        @keyframes flashAnim { 0% { opacity: 0; } 50% { opacity: 0.9; } 100% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <audio id="bgMusic" loop>
-        <source src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" type="audio/mpeg">
-    </audio>
+    <audio id="romanticMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"></audio>
+    <audio id="noMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
+    <audio id="yesMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"></audio>
 
     <div id="lightning" class="lightning"></div>
     <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
@@ -117,7 +88,10 @@
         <button id="noBtn">No</button>
     </div>
 
-    <div id="finalMessage">You just made me the happiest person💕</div>
+    <div id="finalMessage">
+        You just made me the happiest person 💕<br>
+        <span style="font-size: 20px; color: #333;">Be ready at 7:00 pm SHARP & Wear a nice dress</span>
+    </div>
 
     <script>
         const colors = ['#000000', '#FFFF00', '#008000', '#0000FF', '#FF00FF', '#FFA500'];
@@ -125,14 +99,25 @@
         const noBtn = document.getElementById('noBtn');
         const question = document.getElementById('question');
         const finalMessage = document.getElementById('finalMessage');
-        const music = document.getElementById('bgMusic');
         const lightning = document.getElementById('lightning');
         
+        // Audio Controls
+        const romanticMusic = document.getElementById('romanticMusic');
+        const noMusic = document.getElementById('noMusic');
+        const yesMusic = document.getElementById('yesMusic');
+
         let noCount = 0;
         let scale = 1;
 
-        // Create Random Stars
-        for (let i = 0; i < 100; i++) {
+        // Play romantic music on first interaction
+        document.body.addEventListener('click', () => {
+            if (noCount === 0 && finalMessage.style.display === 'none') {
+                romanticMusic.play();
+            }
+        }, { once: true });
+
+        // Generate Stars
+        for (let i = 0; i < 120; i++) {
             let star = document.createElement('div');
             star.className = 'star';
             star.style.left = Math.random() * 100 + 'vw';
@@ -141,41 +126,48 @@
             document.body.appendChild(star);
         }
 
-        // Create Clouds
-        for (let i = 0; i < 4; i++) {
+        // Generate Initial Clouds
+        function addCloud(color = 'white') {
             let cloud = document.createElement('div');
             cloud.className = 'cloud';
-            cloud.style.top = (Math.random() * 30) + '%';
-            cloud.style.animationDelay = (Math.random() * 10) + 's';
+            cloud.style.backgroundColor = color;
+            cloud.style.top = (Math.random() * 40) + '%';
+            cloud.style.left = '-200px';
+            cloud.style.animationDuration = (Math.random() * 10 + 15) + 's';
             document.body.appendChild(cloud);
         }
+        for (let i = 0; i < 5; i++) addCloud();
 
         function createRain() {
-            for(let i=0; i<10; i++) {
+            for(let i=0; i<25; i++) { // Intensified rain
                 let drop = document.createElement('div');
                 drop.className = 'rain';
                 drop.style.left = Math.random() * 100 + 'vw';
-                drop.style.animationDuration = (Math.random() * 0.5 + 0.3) + 's';
+                drop.style.animationDuration = (Math.random() * 0.3 + 0.2) + 's';
                 document.body.appendChild(drop);
-                setTimeout(() => drop.remove(), 2000);
+                setTimeout(() => drop.remove(), 1500);
             }
         }
 
         noBtn.addEventListener('click', () => {
             noCount++;
-            music.play(); // Starts music on interaction
             
-            // Start the "Storm"
-            document.body.style.backgroundColor = "#555"; 
+            // Switch to dramatic music
+            romanticMusic.pause();
+            noMusic.play();
+
+            // Darken background & intensify weather
+            document.body.style.backgroundColor = "#444"; 
+            for(let i=0; i<2; i++) addCloud('#888'); // Add dark clouds
             createRain();
-            if(Math.random() > 0.5) {
+
+            if(Math.random() > 0.4) {
                 lightning.classList.add('flash');
-                setTimeout(() => lightning.classList.remove('flash'), 200);
+                setTimeout(() => lightning.classList.remove('flash'), 150);
             }
 
             if(noCount === 1) noBtn.innerText = "Are you sure?😕";
             
-            // Move No Button & Grow Yes Button
             const x = Math.random() * (window.innerWidth - 150);
             const y = Math.random() * (window.innerHeight - 150);
             noBtn.style.position = 'absolute';
@@ -187,19 +179,23 @@
         });
 
         yesBtn.addEventListener('click', () => {
-            music.play();
+            // Switch to Joyful music
+            romanticMusic.pause();
+            noMusic.pause();
+            yesMusic.play();
+
             question.innerText = "I Knew you would say yes🥰";
-            document.body.style.backgroundColor = "#ffe4e1"; // Back to pink
+            document.body.style.backgroundColor = "#ffe4e1"; 
             document.querySelectorAll('.rain').forEach(r => r.remove());
+            document.querySelectorAll('.cloud').forEach(c => c.style.backgroundColor = 'white');
             
             document.getElementById('btnContainer').style.display = 'none';
             finalMessage.style.display = 'block';
 
-            // Firework effect
-            var end = Date.now() + (5 * 1000);
+            var end = Date.now() + (6 * 1000);
             (function frame() {
-                confetti({ particleCount: 3, angle: 60, spread: 55, origin: { x: 0 } });
-                confetti({ particleCount: 3, angle: 120, spread: 55, origin: { x: 1 } });
+                confetti({ particleCount: 4, angle: 60, spread: 60, origin: { x: 0 }, colors: ['#ff69b4', '#ffffff'] });
+                confetti({ particleCount: 4, angle: 120, spread: 60, origin: { x: 1 }, colors: ['#ff69b4', '#ffffff'] });
                 if (Date.now() < end) requestAnimationFrame(frame);
             }());
         });
