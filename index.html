@@ -7,35 +7,25 @@
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
         * { box-sizing: border-box; }
+        
         body {
             background-color: #ffe4e1;
             margin: 0; padding: 0;
-            height: 100vh; width: 100vw;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            min-height: 100vh; /* Changed from height to min-height */
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             font-family: 'Georgia', serif;
-            overflow: hidden;
+            overflow-x: hidden; /* Prevent side scrolling */
             transition: background 1s ease;
+            position: relative;
         }
 
         /* Star Canvas */
         #star-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
 
-        /* Clouds */
-        .cloud {
-            position: absolute; background: white;
-            width: 120px; height: 40px; border-radius: 50px;
-            opacity: 0.8;
-            animation: moveClouds 20s linear infinite;
-            z-index: 1; transition: background 1s, transform 0.3s;
-        }
-        .cloud::after, .cloud::before {
-            content: ''; position: absolute; background: inherit;
-            width: 60px; height: 60px; border-radius: 50%; top: -25px; left: 20px;
-        }
-        @keyframes moveClouds { from { left: -250px; } to { left: 110%; } }
-
-        /* Lightning Flash */
+        /* Lightning */
         .lightning-flash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; opacity: 0; z-index: 50; pointer-events: none;
@@ -47,47 +37,103 @@
         .rain { position: absolute; width: 2px; height: 25px; background: rgba(255,255,255,0.6); top: -30px; animation: fall 0.4s linear infinite; z-index: 2; }
         @keyframes fall { to { transform: translateY(110vh); } }
 
-        /* UI Elements */
-        .header-space { height: 20vh; display: flex; align-items: center; z-index: 10; }
-        #question { font-size: 28px; color: red; font-weight: bold; text-align: center; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); }
+        /* Main Content Container */
+        .main-wrapper {
+            width: 90%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1; /* This fills the screen but allows expansion */
+            padding: 40px 0;
+            z-index: 10;
+            text-align: center;
+        }
 
-        .button-space { height: 30vh; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 20px; }
-        .container { display: flex; gap: 20px; }
+        #question {
+            font-size: 24px; /* Slightly smaller for mobile */
+            color: red;
+            font-weight: bold;
+            margin-bottom: 30px;
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap; /* Allows buttons to stack if they get too big */
+            min-height: 200px; /* Space for growing button */
+        }
 
         button {
-            padding: 15px 30px; font-size: 18px; border: none; border-radius: 15px;
-            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 15px 30px;
+            font-size: 18px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
             transition: transform 0.2s ease;
         }
-        #yesBtn { background-color: #4CAF50; color: white; }
-        #noBtn { background-color: #f44336; color: white; }
-        
-        #msgBtn { 
-            display: none; background-color: #d81b60; color: white; 
-            position: fixed; bottom: 30px; animation: bounce 2s infinite;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+        #yesBtn { background-color: #4CAF50; color: white; z-index: 101; }
+        #noBtn { background-color: #f44336; color: white; z-index: 100; }
 
-        /* Final Content & Message Overlay */
-        #finalContent { display: none; text-align: center; z-index: 150; padding: 20px; }
+        /* Final Content Area */
+        #finalContent { display: none; margin-top: 20px; width: 100%; }
         #countdown {
-            margin-top: 15px; font-size: 20px; color: #d81b60; font-weight: bold;
-            background: rgba(255,255,255,0.8); padding: 15px; border-radius: 15px;
+            margin: 20px auto;
+            font-size: 18px;
+            color: #d81b60;
+            font-weight: bold;
+            background: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 15px;
+            display: inline-block;
         }
 
+        /* Message Button - Static position so it doesn't move */
+        #msgBtn { 
+            display: none; 
+            background-color: #d81b60; 
+            color: white; 
+            margin-top: 30px;
+            animation: bounce 2s infinite;
+        }
+
+        /* Message Box Popup */
         #messageBox {
-            display: none; position: fixed; top: 50%; left: 50%;
+            display: none;
+            position: fixed;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            width: 85%; max-width: 550px; max-height: 80vh;
+            width: 90%;
+            max-width: 500px;
+            height: 80vh; /* Fixed height for mobile scroll */
             background: rgba(255, 255, 255, 0.98);
-            padding: 35px; border-radius: 25px; border: 2px solid #ffb6c1;
+            padding: 25px;
+            border-radius: 20px;
+            border: 2px solid #ffb6c1;
             box-shadow: 0 0 40px rgba(0,0,0,0.3);
-            z-index: 200; overflow-y: auto;
-            text-align: left; line-height: 1.7; color: #333;
+            z-index: 200;
+            overflow-y: auto; /* Internal scrolling only */
+            text-align: left;
+            font-size: 16px;
         }
-        #messageBox h3 { text-align: center; color: #d81b60; font-size: 24px; margin-top: 0; }
-        #closeMsg { display: block; margin: 20px auto 0; background: #ffb6c1; color: white; width: 150px; }
 
+        /* Clouds */
+        .cloud {
+            position: absolute; background: white;
+            width: 100px; height: 35px; border-radius: 50px;
+            z-index: 1; pointer-events: none;
+        }
+        .cloud::after, .cloud::before {
+            content: ''; position: absolute; background: inherit;
+            width: 50px; height: 50px; border-radius: 50%; top: -20px; left: 15px;
+        }
+        @keyframes moveClouds { from { left: -150px; } to { left: 100%; } }
+
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .heart-float { position: absolute; bottom: -50px; font-size: 24px; animation: floatUp 4s linear forwards; z-index: 5; }
         @keyframes floatUp { to { transform: translateY(-110vh) translateX(50px); opacity: 0; } }
     </style>
@@ -101,11 +147,9 @@
     <audio id="noMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
     <audio id="yesMusic" loop src="yes.mp3"></audio>
 
-    <div class="header-space">
+    <div class="main-wrapper">
         <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
-    </div>
 
-    <div class="button-space">
         <div class="container" id="btnContainer">
             <button id="yesBtn">Yes</button>
             <button id="noBtn">No</button>
@@ -113,16 +157,16 @@
 
         <div id="finalContent">
             <h2 style="color: #d81b60;">I Knew you would say yes🥰</h2>
-            <p style="font-size: 20px;">You just made me the happiest person 💕<br><br>
-            <strong>Be ready at 7:00 pm SHARP & Wear a nice dress</strong></p>
+            <p>You just made me the happiest person 💕</p>
+            <p><strong>Be ready at 7:00 pm SHARP & Wear a nice dress</strong></p>
             <div id="countdown">Loading timer...</div>
+            <br>
+            <button id="msgBtn">Click here for your BD Message🌚</button>
         </div>
     </div>
 
-    <button id="msgBtn">Click here for your BD Message🌚</button>
-
     <div id="messageBox">
-        <h3>My Dearest Zuma... ❤️</h3>
+        <h3 style="text-align: center; color: #d81b60;">My Dearest Zuma... ❤️</h3>
         <p>We often play a game where we describe each other with one word, but actually i always find it difficult to describe such a wonderful girl like you in just one word, So let me describe you in my way.🌚✨</p>
         <p>You're the only sweetest and beautiful girl i have ever fallen and keep falling in love with.... The way you smile, laugh, cry, walk, sing, I love that your eyes talk to me in a loving yet seductive way😂 I love your presence and i crave you in your absence— and presence.🌚</p>
         <p>The way you make me laugh, the way you make me feel like i deserve the whole world, the way you make me feel worthy, loved heared, comfortable. I really don't know what i did to deserve you. 💕</p>
@@ -134,7 +178,7 @@
         <p>With you, every moment feels special, every silence feels comforting, and every challenge feels easier to face. You have this magical way of making even the simplest things feel extraordinary, just by being you. 🌚 I love the way you understand me without me having to say a word, and the way your voice alone can turn my worst days into my best.</p>
         <p>I promise to always cherish you, to stand by your side through everything, and to remind you every single day how incredibly loved you are. Because you, my love, are the most precious gift life has ever given me. 💝</p>
         <p>Happy birthday, my Zuma. 🎉🎂 I truly love you endlessly. ♥️</p>
-        <button id="closeMsg">Close with Love</button>
+        <button id="closeMsg" style="display:block; margin: 20px auto; background:#ffb6c1; color:white;">Close with Love</button>
     </div>
 
     <script>
@@ -153,30 +197,31 @@
         let noCount = 0;
         let scale = 1;
 
-        // Init Stars
         function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
         window.addEventListener('resize', resize); resize();
+        
         let stars = [];
         const starColors = ['#000000', '#FFFF00', '#008000', '#0000FF', '#FF00FF', '#FFA500'];
-        for(let i=0; i<80; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, color: starColors[Math.floor(Math.random()*6)], speed: Math.random()*0.5 });
-        function animateStars() { ctx.clearRect(0,0,canvas.width, canvas.height); stars.forEach(s => { ctx.fillStyle=s.color; ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); s.y+=s.speed; if(s.y>canvas.height) s.y=0; }); requestAnimationFrame(animateStars); }
+        for(let i=0; i<60; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, color: starColors[Math.floor(Math.random()*6)], speed: Math.random()*0.5 });
+        
+        function animateStars() { 
+            ctx.clearRect(0,0,canvas.width, canvas.height); 
+            stars.forEach(s => { ctx.fillStyle=s.color; ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); s.y+=s.speed; if(s.y>canvas.height) s.y=0; }); 
+            requestAnimationFrame(animateStars); 
+        }
         animateStars();
 
-        // Function to create a cloud at a random position
         function createCloud(isDark = false) {
             let cloud = document.createElement('div');
             cloud.className = 'cloud';
-            cloud.style.top = (Math.random() * 40) + '%';
+            cloud.style.top = (Math.random() * 30) + '%';
             cloud.style.backgroundColor = isDark ? "#888" : "white";
-            cloud.style.animationDelay = (Math.random() * 5) + 's';
-            cloud.style.animationDuration = (Math.random() * 10 + 15) + 's';
+            cloud.style.left = "-150px";
+            cloud.style.animation = `moveClouds ${Math.random() * 10 + 15}s linear infinite`;
             document.body.appendChild(cloud);
         }
+        for (let i = 0; i < 4; i++) createCloud();
 
-        // Initial Clouds
-        for (let i = 0; i < 5; i++) createCloud();
-
-        // Start Romantic Music
         window.addEventListener('click', () => { if(noCount === 0 && finalContent.style.display === 'none') romanticMusic.play().catch(()=>{}); }, {once: true});
 
         function spawnRain(amount) {
@@ -184,7 +229,6 @@
                 let drop = document.createElement('div');
                 drop.className = 'rain';
                 drop.style.left = Math.random() * 100 + 'vw';
-                drop.style.animationDelay = (Math.random() * 0.5) + 's';
                 document.body.appendChild(drop);
                 setTimeout(() => drop.remove(), 1000);
             }
@@ -194,30 +238,20 @@
             noCount++;
             romanticMusic.pause();
             noMusic.play().catch(()=>{});
-            
-            // Intensify Storm
             document.body.style.backgroundColor = "#444";
             document.querySelectorAll('.cloud').forEach(c => c.style.backgroundColor = "#888");
-            
-            // Spawn new dark clouds randomly
             if(noCount % 2 === 0) createCloud(true);
-            
-            // Intensify Rain based on noCount
             spawnRain(10 + (noCount * 5));
-
-            // Random Lightning
-            if(Math.random() > 0.5) { 
-                lightning.classList.add('flash-it'); 
-                setTimeout(() => lightning.classList.remove('flash-it'), 100); 
-            }
-
+            if(Math.random() > 0.5) { lightning.classList.add('flash-it'); setTimeout(() => lightning.classList.remove('flash-it'), 100); }
+            
             if(noCount === 1) noBtn.innerText = "Are you sure?😕";
             
+            // On mobile, "No" button moves but stays within viewport bounds
             noBtn.style.position = 'fixed';
-            noBtn.style.left = Math.random() * (window.innerWidth - 150) + 'px';
+            noBtn.style.left = Math.random() * (window.innerWidth - 100) + 'px';
             noBtn.style.top = Math.random() * (window.innerHeight - 100) + 'px';
             
-            scale += 0.45;
+            scale += 0.3; // Slightly smaller growth to prevent massive overlap
             yesBtn.style.transform = `scale(${scale})`;
         });
 
@@ -226,18 +260,14 @@
             yesMusic.play().catch(()=>{});
             document.body.style.backgroundColor = "#ffe4e1";
             document.querySelectorAll('.rain').forEach(r => r.remove());
-            document.querySelectorAll('.cloud').forEach(c => {
-                if(c.style.backgroundColor === "rgb(136, 136, 136)") c.remove(); // Remove excess dark clouds
-                c.style.backgroundColor = "white";
-            });
+            document.querySelectorAll('.cloud').forEach(c => c.style.backgroundColor = "white");
             
             document.getElementById('btnContainer').style.display = 'none';
             document.getElementById('question').style.display = 'none';
             document.getElementById('finalContent').style.display = 'block';
-            msgBtn.style.display = 'block';
+            msgBtn.style.display = 'inline-block';
             
             setInterval(updateCountdown, 1000); updateCountdown();
-            
             setInterval(() => {
                 const heart = document.createElement('div');
                 heart.className = 'heart-float';
@@ -246,7 +276,6 @@
                 document.body.appendChild(heart);
                 setTimeout(() => heart.remove(), 4000);
             }, 300);
-            
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         });
 
