@@ -6,80 +6,109 @@
     <title>A Sky Full of Stars</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
+        * { box-sizing: border-box; }
         body {
-            background-color: #ffe4e1; /* Pink background */
-            margin: 0; height: 100vh;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            background-color: #ffe4e1;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             font-family: 'Arial', sans-serif;
-            overflow: hidden; transition: background 1s ease;
+            overflow: hidden;
+            transition: background 1s ease;
         }
 
-        /* Interactive Stars Layer - Sent to Back */
+        /* Star Canvas - Locked behind everything */
         #star-canvas {
-            position: absolute; top: 0; left: 0;
-            width: 100%; height: 100%; z-index: -1; 
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: -1;
             pointer-events: none;
         }
 
-        /* Clouds Layer */
-        .cloud {
-            position: absolute; background: white;
-            width: 120px; height: 40px; border-radius: 50px;
-            top: 10%; opacity: 0.8;
-            animation: moveClouds 25s linear infinite;
-            z-index: 1; transition: background 1s;
-        }
-        .cloud::after, .cloud::before {
-            content: ''; position: absolute; background: inherit;
-            width: 60px; height: 60px; border-radius: 50%; top: -25px; left: 20px;
+        /* Top Section for Question */
+        .header-space {
+            height: 30vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 5;
         }
 
         #question {
-            font-size: 28px; color: red; font-weight: bold;
-            position: absolute; top: 15%; width: 85%;
-            text-align: center; z-index: 10;
+            font-size: 28px;
+            color: red;
+            font-weight: bold;
+            text-align: center;
+            padding: 0 20px;
         }
 
-        /* Buttons Container - Brought to Front */
-        .container { 
-            display: flex; gap: 20px; z-index: 20; 
+        /* Middle Section for Buttons */
+        .button-space {
+            height: 40vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            z-index: 100; /* Extremely high to ensure clickability */
+        }
+
+        .container {
+            display: flex;
+            gap: 20px;
             position: relative;
         }
 
         button {
-            padding: 15px 35px; font-size: 20px; border: none;
-            border-radius: 15px; cursor: pointer;
-            transition: transform 0.2s;
+            padding: 15px 35px;
+            font-size: 20px;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
             box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            pointer-events: auto !important; /* Forces clickability */
+            transition: transform 0.2s ease;
+            position: relative;
+            z-index: 101;
         }
 
         #yesBtn { background-color: #4CAF50; color: white; }
         #noBtn { background-color: #f44336; color: white; }
 
-        /* Final UI */
+        /* Final Content */
         #finalContent {
-            display: none; z-index: 30; text-align: center;
-        }
-        #countdown {
-            margin-top: 20px; font-size: 22px; color: #d81b60; font-weight: bold;
-            background: rgba(255,255,255,0.7); padding: 15px 25px; border-radius: 20px;
+            display: none;
+            text-align: center;
+            z-index: 150;
         }
 
-        /* Floating Hearts */
+        #countdown {
+            margin-top: 20px;
+            font-size: 22px;
+            color: #d81b60;
+            font-weight: bold;
+            background: rgba(255,255,255,0.8);
+            padding: 15px;
+            border-radius: 20px;
+        }
+
         .heart-float {
-            position: absolute; bottom: -50px;
-            font-size: 24px; animation: floatUp 4s linear forwards;
-            z-index: 5;
+            position: absolute;
+            bottom: -50px;
+            font-size: 24px;
+            animation: floatUp 4s linear forwards;
+            z-index: 1;
         }
         @keyframes floatUp {
             to { transform: translateY(-110vh) translateX(50px); opacity: 0; }
         }
 
-        .rain { position: absolute; width: 2px; height: 20px; background: white; top: -20px; animation: fall 0.4s linear infinite; z-index: 4; }
+        .rain { position: absolute; width: 2px; height: 20px; background: white; top: -20px; animation: fall 0.4s linear infinite; z-index: 2; }
         @keyframes fall { to { transform: translateY(100vh); } }
-        @keyframes moveClouds { from { left: -200px; } to { left: 100%; } }
     </style>
 </head>
 <body>
@@ -90,27 +119,123 @@
     <audio id="noMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
     <audio id="yesMusic" loop src="Coldplay - A Sky Full Of Stars (Official Video).mp3"></audio>
 
-    <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
-
-    <div class="container" id="btnContainer">
-        <button id="yesBtn">Yes</button>
-        <button id="noBtn">No</button>
+    <div class="header-space">
+        <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
     </div>
 
-    <div id="finalContent">
-        <h2 style="color: #d81b60; font-size: 28px;">I Knew you would say yes🥰</h2>
-        <p style="font-size: 22px; color: #333;">You just made me the happiest person 💕<br>
-        <strong>Be ready at 7:00 pm SHARP & Wear a nice dress</strong></p>
-        <div id="countdown">Loading timer...</div>
+    <div class="button-space" id="mainArea">
+        <div class="container" id="btnContainer">
+            <button id="yesBtn">Yes</button>
+            <button id="noBtn">No</button>
+        </div>
+
+        <div id="finalContent">
+            <h2 style="color: #d81b60; font-size: 28px;">I Knew you would say yes🥰</h2>
+            <p style="font-size: 22px; color: #333;">You just made me the happiest person 💕<br>
+            <strong>Be ready at 7:00 pm SHARP & Wear a nice dress</strong></p>
+            <div id="countdown">Loading timer...</div>
+        </div>
     </div>
 
     <script>
         const yesBtn = document.getElementById('yesBtn');
         const noBtn = document.getElementById('noBtn');
         const question = document.getElementById('question');
+        const btnContainer = document.getElementById('btnContainer');
         const finalContent = document.getElementById('finalContent');
         const canvas = document.getElementById('star-canvas');
         const ctx = canvas.getContext('2d');
         
         const romanticMusic = document.getElementById('romanticMusic');
-        const no
+        const noMusic = document.getElementById('noMusic');
+        const yesMusic = document.getElementById('yesMusic');
+
+        let noCount = 0;
+        let scale = 1;
+
+        // Resize Canvas
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize);
+        resize();
+
+        // Stars
+        let stars = [];
+        const starColors = ['#000000', '#FFFF00', '#008000', '#0000FF', '#FF00FF', '#FFA500'];
+        for(let i=0; i<100; i++) {
+            stars.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2,
+                color: starColors[Math.floor(Math.random()*starColors.length)],
+                speed: Math.random() * 0.5
+            });
+        }
+
+        function animateStars() {
+            ctx.clearRect(0,0,canvas.width, canvas.height);
+            stars.forEach(s => {
+                ctx.fillStyle = s.color;
+                ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+                s.y += s.speed; if(s.y > canvas.height) s.y = 0;
+            });
+            requestAnimationFrame(animateStars);
+        }
+        animateStars();
+
+        // Music Start
+        window.addEventListener('click', () => {
+            if(noCount === 0 && finalContent.style.display === 'none') romanticMusic.play().catch(()=>{});
+        }, {once: true});
+
+        function updateCountdown() {
+            const target = new Date("March 28, 2026 19:00:00").getTime();
+            const now = new Date().getTime();
+            const diff = target - now;
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('countdown').innerHTML = `Time remaining: ${d}d ${h}h ${m}m ${s}s`;
+        }
+
+        noBtn.addEventListener('click', (e) => {
+            noCount++;
+            romanticMusic.pause();
+            noMusic.play().catch(()=>{});
+            document.body.style.backgroundColor = "#444";
+            
+            // Text change
+            if(noCount === 1) noBtn.innerText = "Are you sure?😕";
+            
+            // Move button - ensuring it stays within visible screen
+            noBtn.style.position = 'fixed';
+            noBtn.style.left = Math.random() * (window.innerWidth - 150) + 'px';
+            noBtn.style.top = Math.random() * (window.innerHeight - 100) + 'px';
+            
+            // Scale Yes Button
+            scale += 0.4;
+            yesBtn.style.transform = `scale(${scale})`;
+        });
+
+        yesBtn.addEventListener('click', () => {
+            noMusic.pause(); romanticMusic.pause();
+            yesMusic.play().catch(()=>{});
+            document.body.style.backgroundColor = "#ffe4e1";
+            btnContainer.style.display = 'none';
+            question.style.display = 'none';
+            finalContent.style.display = 'block';
+            setInterval(updateCountdown, 1000);
+            updateCountdown();
+            setInterval(() => {
+                const heart = document.createElement('div');
+                heart.className = 'heart-float';
+                heart.innerText = ['💘','♥','💖'][Math.floor(Math.random()*3)];
+                heart.style.left = Math.random() * 100 + 'vw';
+                document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 4000);
+            }, 300);
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        });
+    </script>
+</body>
+</html>
