@@ -3,201 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A Special Birthday Question</title>
+    <title>A Special Surprise</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        :root { --bg-color: #ffe4e1; }
+        :root { --pink: #ffe4e1; --brown: #c3a683; --dark-brown: #8b6d4d; }
         body {
-            background-color: var(--bg-color);
+            background-color: var(--pink);
             margin: 0; height: 100vh;
             display: flex; flex-direction: column;
             align-items: center; justify-content: center;
-            font-family: 'Arial', sans-serif;
+            font-family: 'Georgia', serif;
             overflow: hidden; transition: background 0.8s ease;
         }
 
-        /* Clouds */
-        .cloud {
-            position: absolute; background: white;
-            width: 120px; height: 40px; border-radius: 50px;
-            top: 50px; opacity: 0.8;
-            animation: moveClouds 25s linear infinite;
-            z-index: 2;
+        /* Envelope Styling */
+        #envelope-wrapper { position: relative; cursor: pointer; z-index: 100; transition: 0.5s; }
+        .envelope {
+            width: 280px; height: 180px;
+            background: var(--brown);
+            border-bottom-left-radius: 10px; border-bottom-right-radius: 10px;
+            position: relative; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
         }
-        .cloud::after, .cloud::before {
-            content: ''; position: absolute; background: inherit;
-            width: 60px; height: 60px; border-radius: 50%; top: -25px; left: 20px;
+        .envelope::before {
+            content: ''; position: absolute; top: 0;
+            border-left: 140px solid transparent; border-right: 140px solid transparent;
+            border-top: 100px solid var(--dark-brown);
         }
-        .cloud::after { width: 50px; height: 50px; top: -20px; left: 55px; }
+        .seal {
+            position: absolute; top: 80px; left: 120px;
+            width: 40px; height: 40px; background: #b22222;
+            border-radius: 50%; border: 2px solid #8b0000;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
 
-        /* Stars */
-        .star { position: absolute; width: 5px; height: 5px; border-radius: 50%; z-index: 1; }
+        /* Hidden Main Content */
+        #main-content { display: none; flex-direction: column; align-items: center; width: 100%; }
 
-        #question {
-            font-size: 28px; color: red; font-weight: bold;
-            position: absolute; top: 15%; width: 85%;
-            text-align: center; z-index: 10;
-        }
+        /* Interactive Stars */
+        .star { position: absolute; width: 6px; height: 6px; border-radius: 50%; z-index: 1; transition: transform 0.2s ease-out; }
+
+        #question { font-size: 28px; color: red; font-weight: bold; margin-bottom: 30px; z-index: 10; text-align: center; padding: 0 20px;}
 
         .container { display: flex; gap: 20px; z-index: 10; }
-
         button {
-            padding: 15px 35px; font-size: 20px; border: none;
-            border-radius: 15px; cursor: pointer;
-            transition: transform 0.2s, background-color 0.3s;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            padding: 15px 35px; font-size: 20px; border-radius: 15px; border: none;
+            cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
-
         #yesBtn { background-color: #4CAF50; color: white; }
         #noBtn { background-color: #f44336; color: white; position: relative; }
 
-        #finalMessage {
-            display: none; font-size: 24px; color: #d81b60;
-            font-weight: bold; z-index: 10; line-height: 1.6;
+        /* Countdown */
+        #timer { margin-top: 40px; font-size: 18px; color: #555; font-weight: bold; background: rgba(255,255,255,0.4); padding: 10px 20px; border-radius: 20px; }
+
+        /* Floating Hearts */
+        .heart { position: absolute; bottom: -50px; font-size: 24px; animation: floatUp 4s linear forwards; z-index: 15; }
+        @keyframes floatUp {
+            to { transform: translateY(-110vh) translateX(100px); opacity: 0; }
         }
 
         /* Weather Effects */
-        .rain {
-            position: absolute; width: 2px; height: 20px;
-            background: rgba(255, 255, 255, 0.4);
-            top: -20px; animation: fall 0.4s linear infinite; z-index: 5;
-        }
+        .rain { position: absolute; width: 2px; height: 20px; background: rgba(255,255,255,0.4); animation: fall 0.4s linear infinite; z-index: 5; }
         @keyframes fall { to { transform: translateY(100vh); } }
-
-        @keyframes moveClouds { from { left: -200px; } to { left: 100%; } }
-
-        .lightning {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; opacity: 0; z-index: 6; pointer-events: none;
-        }
+        .lightning { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; opacity: 0; z-index: 20; pointer-events: none; }
         .flash { animation: flashAnim 0.15s ease-out; }
         @keyframes flashAnim { 0% { opacity: 0; } 50% { opacity: 0.9; } 100% { opacity: 0; } }
     </style>
 </head>
 <body>
 
-    <audio id="romanticMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-15.mp3"></audio>
-    <audio id="noMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
-    <audio id="yesMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"></audio>
-
-    <div id="lightning" class="lightning"></div>
-    <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
-
-    <div class="container" id="btnContainer">
-        <button id="yesBtn">Yes</button>
-        <button id="noBtn">No</button>
+    <audio id="yesMusic" src="Coldplay - A Sky Full Of Stars (Official Video).mp3"></audio> <div id="envelope-wrapper" onclick="openEnvelope()">
+        <p style="text-align: center; color: var(--dark-brown); font-weight: bold;">Tap to open your invite</p>
+        <div class="envelope"><div class="seal"></div></div>
     </div>
 
-    <div id="finalMessage">
-        You just made me the happiest person 💕<br>
-        <span style="font-size: 20px; color: #333;">Be ready at 7:00 pm SHARP & Wear a nice dress</span>
+    <div id="main-content">
+        <div id="lightning" class="lightning"></div>
+        <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
+
+        <div class="container" id="btnContainer">
+            <button id="yesBtn">Yes</button>
+            <button id="noBtn">No</button>
+        </div>
+
+        <div id="finalMessage" style="display:none; text-align: center;">
+            <h2 style="color: #d81b60;">I Knew you would say yes🥰</h2>
+            <p style="font-size: 24px; font-weight: bold;">You just made me the happiest person💕</p>
+            <p style="font-size: 20px; color: #333;">Be ready at 7:00 pm SHARP & Wear a nice dress</p>
+        </div>
+
+        <div id="timer">Countdown to our date: Loading...</div>
     </div>
 
     <script>
-        const colors = ['#000000', '#FFFF00', '#008000', '#0000FF', '#FF00FF', '#FFA500'];
         const yesBtn = document.getElementById('yesBtn');
         const noBtn = document.getElementById('noBtn');
-        const question = document.getElementById('question');
-        const finalMessage = document.getElementById('finalMessage');
-        const lightning = document.getElementById('lightning');
-        
-        // Audio Controls
-        const romanticMusic = document.getElementById('romanticMusic');
-        const noMusic = document.getElementById('noMusic');
         const yesMusic = document.getElementById('yesMusic');
+        const starColors = ['#000000', '#FFFF00', '#008000', '#0000FF', '#FF00FF', '#FFA500'];
+        const stars = [];
 
-        let noCount = 0;
-        let scale = 1;
-
-        // Play romantic music on first interaction
-        document.body.addEventListener('click', () => {
-            if (noCount === 0 && finalMessage.style.display === 'none') {
-                romanticMusic.play();
-            }
-        }, { once: true });
-
-        // Generate Stars
-        for (let i = 0; i < 120; i++) {
+        // 1. Interactive Stars Setup
+        for (let i = 0; i < 100; i++) {
             let star = document.createElement('div');
             star.className = 'star';
             star.style.left = Math.random() * 100 + 'vw';
             star.style.top = Math.random() * 100 + 'vh';
-            star.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            star.style.backgroundColor = starColors[Math.floor(Math.random() * starColors.length)];
             document.body.appendChild(star);
+            stars.push({ el: star, x: parseFloat(star.style.left), y: parseFloat(star.style.top) });
         }
 
-        // Generate Initial Clouds
-        function addCloud(color = 'white') {
-            let cloud = document.createElement('div');
-            cloud.className = 'cloud';
-            cloud.style.backgroundColor = color;
-            cloud.style.top = (Math.random() * 40) + '%';
-            cloud.style.left = '-200px';
-            cloud.style.animationDuration = (Math.random() * 10 + 15) + 's';
-            document.body.appendChild(cloud);
-        }
-        for (let i = 0; i < 5; i++) addCloud();
+        document.addEventListener('mousemove', (e) => {
+            stars.forEach(star => {
+                const dx = e.clientX - (star.el.offsetLeft);
+                const dy = e.clientY - (star.el.offsetTop);
+                const dist = Math.sqrt(dx*dx + dy*dy);
+                if (dist < 100) {
+                    star.el.style.transform = `translate(${-dx/2}px, ${-dy/2}px)`;
+                } else {
+                    star.el.style.transform = `translate(0,0)`;
+                }
+            });
+        });
 
-        function createRain() {
-            for(let i=0; i<25; i++) { // Intensified rain
+        // 2. Open Envelope Function
+        function openEnvelope() {
+            document.getElementById('envelope-wrapper').style.display = 'none';
+            document.getElementById('main-content').style.display = 'flex';
+        }
+
+        // 3. Countdown Timer Logic
+        const targetDate = new Date("March 28, 2026 19:00:00").getTime();
+        setInterval(() => {
+            const now = new Date().getTime();
+            const diff = targetDate - now;
+            const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            document.getElementById('timer').innerHTML = `Countdown: ${d}d ${h}h ${m}m ${s}s`;
+        }, 1000);
+
+        // 4. No Button Interaction
+        let noCount = 0;
+        let scale = 1;
+        noBtn.addEventListener('click', () => {
+            noCount++;
+            document.body.style.backgroundColor = "#444";
+            if(noCount === 1) noBtn.innerText = "Are you sure?😕";
+            
+            // Move No, Grow Yes
+            noBtn.style.position = 'absolute';
+            noBtn.style.left = Math.random() * (window.innerWidth - 150) + 'px';
+            noBtn.style.top = Math.random() * (window.innerHeight - 150) + 'px';
+            scale += 0.5;
+            yesBtn.style.transform = `scale(${scale})`;
+            
+            // Lightning & Rain
+            document.getElementById('lightning').classList.add('flash');
+            setTimeout(() => document.getElementById('lightning').classList.remove('flash'), 150);
+            for(let i=0; i<30; i++){
                 let drop = document.createElement('div');
                 drop.className = 'rain';
                 drop.style.left = Math.random() * 100 + 'vw';
-                drop.style.animationDuration = (Math.random() * 0.3 + 0.2) + 's';
                 document.body.appendChild(drop);
                 setTimeout(() => drop.remove(), 1500);
             }
-        }
-
-        noBtn.addEventListener('click', () => {
-            noCount++;
-            
-            // Switch to dramatic music
-            romanticMusic.pause();
-            noMusic.play();
-
-            // Darken background & intensify weather
-            document.body.style.backgroundColor = "#444"; 
-            for(let i=0; i<2; i++) addCloud('#888'); // Add dark clouds
-            createRain();
-
-            if(Math.random() > 0.4) {
-                lightning.classList.add('flash');
-                setTimeout(() => lightning.classList.remove('flash'), 150);
-            }
-
-            if(noCount === 1) noBtn.innerText = "Are you sure?😕";
-            
-            const x = Math.random() * (window.innerWidth - 150);
-            const y = Math.random() * (window.innerHeight - 150);
-            noBtn.style.position = 'absolute';
-            noBtn.style.left = x + 'px';
-            noBtn.style.top = y + 'px';
-
-            scale += 0.5;
-            yesBtn.style.transform = `scale(${scale})`;
         });
 
+        // 5. Yes Button Interaction
         yesBtn.addEventListener('click', () => {
-            // Switch to Joyful music
-            romanticMusic.pause();
-            noMusic.pause();
-            yesMusic.play();
-
-            question.innerText = "I Knew you would say yes🥰";
-            document.body.style.backgroundColor = "#ffe4e1"; 
-            document.querySelectorAll('.rain').forEach(r => r.remove());
-            document.querySelectorAll('.cloud').forEach(c => c.style.backgroundColor = 'white');
-            
+            yesMusic.play(); // Playing the uploaded Coldplay track
             document.getElementById('btnContainer').style.display = 'none';
-            finalMessage.style.display = 'block';
+            document.getElementById('question').style.display = 'none';
+            document.getElementById('finalMessage').style.display = 'block';
+            document.body.style.backgroundColor = var(--pink);
 
-            var end = Date.now() + (6 * 1000);
-            (function frame() {
-                confetti({ particleCount: 4, angle: 60, spread: 60, origin: { x: 0 }, colors: ['#ff69b4', '#ffffff'] });
-                confetti({ particleCount: 4, angle: 120, spread: 60, origin: { x: 1 }, colors: ['#ff69b4', '#ffffff'] });
-                if (Date.now() < end) requestAnimationFrame(frame);
-            }());
+            // Floating Hearts Effect
+            const heartTypes = ['💘','♥','💖'];
+            setInterval(() => {
+                let h = document.createElement('div');
+                h.className = 'heart';
+                h.innerHTML = heartTypes[Math.floor(Math.random()*3)];
+                h.style.left = Math.random() * 100 + 'vw';
+                document.body.appendChild(h);
+                setTimeout(() => h.remove(), 4000);
+            }, 300);
+
+            // Confetti
+            confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         });
     </script>
 </body>
