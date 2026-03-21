@@ -2,40 +2,29 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>A Sky Full of Stars - For Zuma</title>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
     <style>
-        * { box-sizing: border-box; }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
         body {
             background-color: #ffe4e1;
             margin: 0; padding: 0;
-            height: 100vh; width: 100vw;
-            display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            min-height: 100vh;
+            width: 100vw;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             font-family: 'Georgia', serif;
-            overflow: hidden;
+            overflow-x: hidden;
             transition: background 1s ease;
         }
 
-        /* Star Canvas */
+        body.modal-open { overflow: hidden; position: fixed; width: 100%; }
+
         #star-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
 
-        /* Clouds */
-        .cloud {
-            position: absolute; background: white;
-            width: 120px; height: 40px; border-radius: 50px;
-            opacity: 0.8;
-            animation: moveClouds 20s linear infinite;
-            z-index: 1; transition: background 1s, transform 0.3s;
-        }
-        .cloud::after, .cloud::before {
-            content: ''; position: absolute; background: inherit;
-            width: 60px; height: 60px; border-radius: 50%; top: -25px; left: 20px;
-        }
-        @keyframes moveClouds { from { left: -250px; } to { left: 110%; } }
-
-        /* Lightning Flash */
         .lightning-flash {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: white; opacity: 0; z-index: 50; pointer-events: none;
@@ -43,16 +32,26 @@
         .flash-it { animation: flashAnim 0.1s ease-out; }
         @keyframes flashAnim { 0% { opacity: 0; } 50% { opacity: 0.8; } 100% { opacity: 0; } }
 
-        /* Rain */
         .rain { position: absolute; width: 2px; height: 25px; background: rgba(255,255,255,0.6); top: -30px; animation: fall 0.4s linear infinite; z-index: 2; }
         @keyframes fall { to { transform: translateY(110vh); } }
 
-        /* UI Elements */
-        .header-space { height: 20vh; display: flex; align-items: center; z-index: 10; }
-        #question { font-size: 28px; color: red; font-weight: bold; text-align: center; text-shadow: 1px 1px 2px rgba(255,255,255,0.5); }
+        .main-wrapper {
+            width: 90%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 0;
+            z-index: 10;
+            text-align: center;
+        }
 
-        .button-space { height: 30vh; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 100; gap: 20px; }
-        .container { display: flex; gap: 20px; }
+        #question { font-size: 24px; color: red; font-weight: bold; margin-bottom: 40px; }
+
+        .container {
+            display: flex; gap: 20px; justify-content: center; align-items: center;
+            flex-wrap: wrap; min-height: 150px;
+        }
 
         button {
             padding: 15px 30px; font-size: 18px; border: none; border-radius: 15px;
@@ -61,33 +60,41 @@
         }
         #yesBtn { background-color: #4CAF50; color: white; }
         #noBtn { background-color: #f44336; color: white; }
-        
-        #msgBtn { 
-            display: none; background-color: #d81b60; color: white; 
-            position: fixed; bottom: 30px; animation: bounce 2s infinite;
-        }
-        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
 
-        /* Final Content & Message Overlay */
-        #finalContent { display: none; text-align: center; z-index: 150; padding: 20px; }
+        #finalContent { display: none; margin-top: 20px; width: 100%; }
         #countdown {
-            margin-top: 15px; font-size: 20px; color: #d81b60; font-weight: bold;
+            margin: 20px auto; font-size: 18px; color: #d81b60; font-weight: bold;
             background: rgba(255,255,255,0.8); padding: 15px; border-radius: 15px;
+            display: inline-block;
+        }
+
+        /* Buttons styling */
+        .action-btns { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px; }
+        #msgBtn, #vidBtn { display: none; background-color: #d81b60; color: white; animation: bounce 2s infinite; width: 250px; }
+        #vidBtn { background-color: #333; animation-delay: 0.5s; }
+
+        /* Overlays */
+        .overlay {
+            display: none; position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+            z-index: 200; justify-content: center; align-items: center;
         }
 
         #messageBox {
-            display: none; position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 85%; max-width: 550px; max-height: 80vh;
-            background: rgba(255, 255, 255, 0.98);
-            padding: 35px; border-radius: 25px; border: 2px solid #ffb6c1;
-            box-shadow: 0 0 40px rgba(0,0,0,0.3);
-            z-index: 200; overflow-y: auto;
-            text-align: left; line-height: 1.7; color: #333;
+            width: 90%; max-width: 500px; max-height: 80vh;
+            background: white; padding: 25px; border-radius: 20px;
+            overflow-y: auto; text-align: left; position: relative;
         }
-        #messageBox h3 { text-align: center; color: #d81b60; font-size: 24px; margin-top: 0; }
-        #closeMsg { display: block; margin: 20px auto 0; background: #ffb6c1; color: white; width: 150px; }
 
+        /* Video Container */
+        #videoContainer { width: 95%; max-width: 800px; position: relative; }
+        video { width: 100%; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
+        .close-vid { position: absolute; top: -45px; right: 0; color: white; background: none; border: 1px solid white; padding: 5px 15px; }
+
+        .cloud { position: absolute; background: white; width: 100px; height: 35px; border-radius: 50px; z-index: 1; pointer-events: none; }
+        .cloud::after, .cloud::before { content: ''; position: absolute; background: inherit; width: 50px; height: 50px; border-radius: 50%; top: -20px; left: 15px; }
+        @keyframes moveClouds { from { left: -150px; } to { left: 100%; } }
+        @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         .heart-float { position: absolute; bottom: -50px; font-size: 24px; animation: floatUp 4s linear forwards; z-index: 5; }
         @keyframes floatUp { to { transform: translateY(-110vh) translateX(50px); opacity: 0; } }
     </style>
@@ -101,11 +108,9 @@
     <audio id="noMusic" loop src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3"></audio>
     <audio id="yesMusic" loop src="yes.mp3"></audio>
 
-    <div class="header-space">
+    <div class="main-wrapper">
         <h1 id="question">Will you spent your birthday with you favorite DIDI?😁</h1>
-    </div>
 
-    <div class="button-space">
         <div class="container" id="btnContainer">
             <button id="yesBtn">Yes</button>
             <button id="noBtn">No</button>
@@ -113,41 +118,47 @@
 
         <div id="finalContent">
             <h2 style="color: #d81b60;">I Knew you would say Yes🥰</h2>
-            <p style="font-size: 20px;">You just made me the happiest person 💕<br><br>
-            <strong>Be ready at 4:30 pm SHARP & Wear a nice dress</strong></p>
+            <p>You just made me the happiest person 💕</p>
+            <p><strong>Be ready at 4:30 pm SHARP & Wear a nice dress</strong></p>
             <div id="countdown">Loading timer...</div>
+            
+            <div class="action-btns">
+                <button id="msgBtn">Click here for your BD Message🌚</button>
+                <button id="vidBtn">Click here for your BD Video 🌚</button>
+            </div>
         </div>
     </div>
 
-    <button id="msgBtn">Click here for your BD Message🌚</button>
+    <div class="overlay" id="msgOverlay">
+        <div id="messageBox">
+            <h3 style="text-align: center; color: #d81b60;">My Dearest Zuma... ❤️</h3>
+            <p>If there’s one thing I wish you could see...</p>
+            <p>Happy birthday ya Habebt Alby ❤️🎂</p>
+            <button id="closeMsg" style="display:block; margin: 20px auto; background:#ffb6c1; color:white; width: 100%;">Close with Love</button>
+        </div>
+    </div>
 
-    <div id="messageBox">
-        <h3>My Dearest Zuma... ❤️</h3>
-        <p>If there’s one thing I wish you could see, it’s what goes on inside me when it comes to you because I don’t think I say it enough, or show it the way you deserve.🙄</p>
-        <p>You’re there more than you think. In the middle of my day, in the quiet moments, on my way to work, before I sleep, even when I’m surrounded by everything else, a part of me is always thinking about you.🌚</p>
-        <p>And I know sometimes I go quiet, or I don’t find the right words, and it might make you feel unsure bas el 7a2ee2a en that silence never means distance. If anything, it means there’s more inside me than I can easily say.👩🏽‍🤝‍🧑🏻 </p>
-        <p>You didn’t just become someone I love you became a part of how I see my life. A part of what I look forward to. A part of what makes things feel right. A part I wasn’t even searching for that, but somehow I found it with you. It just feels like a part of me was always meant to find you. ✨</p>
-        <p>I just wanted you to know that I truly love you. I love every thing about you.❤️ And I want to be clear about something… 
-        If this day matters to you, then it matters to me. 
-        Not because it’s just a date, but because it’s yours. 
-        And you are someone very special and important in my life. 
-        You are one of the best things that ever happened to me, and I don’t take that for granted, and I hope you know that in your heart.💞</p>
-        <p>I love being with you in the small moments, the random talks, the silence, the laughs, everything just feels better with you in it. And honestly, when I think about what’s coming I don’t just see days passing. I see a life, one that I want you to be a part of. And Maybe One Day🌚, building something real together, a home, a family and everything in between. 🏡❤️</p>
-        <p>I’m really lucky to have you and to be able to call you my girl.❤️</p>
-        <p>Happy birthday ya Habebt Alby ❤️🎂</p>
-        <p>I hope this year gives you the happiness, peace, and everything your heart is looking for because you deserve it.💘✨</p>
-        <button id="closeMsg">Close with Love</button>
+    <div class="overlay" id="vidOverlay">
+        <div id="videoContainer">
+            <button class="close-vid" id="closeVid">Close X</button>
+            <video id="bdVideo" controls>
+                <source src="your-video-file.mp4" type="video/mp4">
+                Your browser does not support the video tag.
+            </video>
+        </div>
     </div>
 
     <script>
         const yesBtn = document.getElementById('yesBtn');
         const noBtn = document.getElementById('noBtn');
         const msgBtn = document.getElementById('msgBtn');
-        const messageBox = document.getElementById('messageBox');
+        const vidBtn = document.getElementById('vidBtn');
+        const msgOverlay = document.getElementById('msgOverlay');
+        const vidOverlay = document.getElementById('vidOverlay');
+        const bdVideo = document.getElementById('bdVideo');
         const closeMsg = document.getElementById('closeMsg');
-        const lightning = document.getElementById('lightning');
-        const canvas = document.getElementById('star-canvas');
-        const ctx = canvas.getContext('2d');
+        const closeVid = document.getElementById('closeVid');
+        
         const romanticMusic = document.getElementById('romanticMusic');
         const noMusic = document.getElementById('noMusic');
         const yesMusic = document.getElementById('yesMusic');
@@ -155,101 +166,62 @@
         let noCount = 0;
         let scale = 1;
 
-        // Init Stars
-        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
-        window.addEventListener('resize', resize); resize();
-        let stars = [];
-        const starColors = ['#000000', '#FFFF00', '#008000', '#0000FF', '#FF00FF', '#FFA500'];
-        for(let i=0; i<80; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, color: starColors[Math.floor(Math.random()*6)], speed: Math.random()*0.5 });
-        function animateStars() { ctx.clearRect(0,0,canvas.width, canvas.height); stars.forEach(s => { ctx.fillStyle=s.color; ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); s.y+=s.speed; if(s.y>canvas.height) s.y=0; }); requestAnimationFrame(animateStars); }
-        animateStars();
+        // ... (Keep Star and Cloud animation code the same as your previous version) ...
 
-        // Function to create a cloud at a random position
-        function createCloud(isDark = false) {
-            let cloud = document.createElement('div');
-            cloud.className = 'cloud';
-            cloud.style.top = (Math.random() * 40) + '%';
-            cloud.style.backgroundColor = isDark ? "#888" : "white";
-            cloud.style.animationDelay = (Math.random() * 5) + 's';
-            cloud.style.animationDuration = (Math.random() * 10 + 15) + 's';
-            document.body.appendChild(cloud);
-        }
-
-        // Initial Clouds
-        for (let i = 0; i < 5; i++) createCloud();
-
-        // Start Romantic Music
-        window.addEventListener('click', () => { if(noCount === 0 && finalContent.style.display === 'none') romanticMusic.play().catch(()=>{}); }, {once: true});
-
-        function spawnRain(amount) {
-            for(let i=0; i < amount; i++) {
-                let drop = document.createElement('div');
-                drop.className = 'rain';
-                drop.style.left = Math.random() * 100 + 'vw';
-                drop.style.animationDelay = (Math.random() * 0.5) + 's';
-                document.body.appendChild(drop);
-                setTimeout(() => drop.remove(), 1000);
-            }
+        function pauseAllMusic() {
+            romanticMusic.pause();
+            noMusic.pause();
+            yesMusic.pause();
         }
 
         noBtn.addEventListener('click', () => {
             noCount++;
-            romanticMusic.pause();
+            pauseAllMusic();
             noMusic.play().catch(()=>{});
-            
-            // Intensify Storm
-            document.body.style.backgroundColor = "#444";
-            document.querySelectorAll('.cloud').forEach(c => c.style.backgroundColor = "#888");
-            
-            // Spawn new dark clouds randomly
-            if(noCount % 2 === 0) createCloud(true);
-            
-            // Intensify Rain based on noCount
-            spawnRain(10 + (noCount * 5));
-
-            // Random Lightning
-            if(Math.random() > 0.5) { 
-                lightning.classList.add('flash-it'); 
-                setTimeout(() => lightning.classList.remove('flash-it'), 100); 
-            }
-
-            if(noCount === 1) noBtn.innerText = "Are you sure?😕";
-            
+            // ... (Keep existing No button logic) ...
             noBtn.style.position = 'fixed';
-            noBtn.style.left = Math.random() * (window.innerWidth - 150) + 'px';
+            noBtn.style.left = Math.random() * (window.innerWidth - 100) + 'px';
             noBtn.style.top = Math.random() * (window.innerHeight - 100) + 'px';
-            
             scale += 0.45;
             yesBtn.style.transform = `scale(${scale})`;
         });
 
         yesBtn.addEventListener('click', () => {
-            noMusic.pause(); romanticMusic.pause();
+            pauseAllMusic();
             yesMusic.play().catch(()=>{});
-            document.body.style.backgroundColor = "#ffe4e1";
-            document.querySelectorAll('.rain').forEach(r => r.remove());
-            document.querySelectorAll('.cloud').forEach(c => {
-                if(c.style.backgroundColor === "rgb(136, 136, 136)") c.remove(); // Remove excess dark clouds
-                c.style.backgroundColor = "white";
-            });
-            
             document.getElementById('btnContainer').style.display = 'none';
             document.getElementById('question').style.display = 'none';
             document.getElementById('finalContent').style.display = 'block';
             msgBtn.style.display = 'block';
-            
-            setInterval(updateCountdown, 1000); updateCountdown();
-            
-            setInterval(() => {
-                const heart = document.createElement('div');
-                heart.className = 'heart-float';
-                heart.innerText = ['💘','♥','💖'][Math.floor(Math.random()*3)];
-                heart.style.left = Math.random() * 100 + 'vw';
-                document.body.appendChild(heart);
-                setTimeout(() => heart.remove(), 4000);
-            }, 300);
-            
+            vidBtn.style.display = 'block';
+            setInterval(updateCountdown, 1000);
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+        });
+
+        // Message Box Logic
+        msgBtn.addEventListener('click', () => { 
+            msgOverlay.style.display = 'flex'; 
+            document.body.classList.add('modal-open');
+        });
+        closeMsg.addEventListener('click', () => { 
+            msgOverlay.style.display = 'none'; 
+            document.body.classList.remove('modal-open');
+        });
+
+        // Video Box Logic
+        vidBtn.addEventListener('click', () => {
+            pauseAllMusic(); // Stops the "Yes" song so she can hear the video
+            vidOverlay.style.display = 'flex';
+            bdVideo.play();
+            document.body.classList.add('modal-open');
+        });
+
+        closeVid.addEventListener('click', () => {
+            bdVideo.pause();
+            bdVideo.currentTime = 0;
+            vidOverlay.style.display = 'none';
+            document.body.classList.remove('modal-open');
+            yesMusic.play(); // Optional: resume music after video
         });
 
         function updateCountdown() {
@@ -262,9 +234,6 @@
             const s = Math.floor((diff % (1000 * 60)) / 1000);
             document.getElementById('countdown').innerHTML = `Time remaining: ${d}d ${h}h ${m}m ${s}s`;
         }
-
-        msgBtn.addEventListener('click', () => { messageBox.style.display = 'block'; });
-        closeMsg.addEventListener('click', () => { messageBox.style.display = 'none'; });
     </script>
 </body>
 </html>
