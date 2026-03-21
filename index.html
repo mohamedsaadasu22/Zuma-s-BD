@@ -21,6 +21,7 @@
             transition: background 1s ease;
         }
 
+        /* Prevent background scroll when overlays are open */
         body.modal-open { overflow: hidden; position: fixed; width: 100%; }
 
         #star-canvas { position: fixed; top: 0; left: 0; z-index: -1; pointer-events: none; }
@@ -68,28 +69,29 @@
             display: inline-block;
         }
 
-        /* Buttons styling */
         .action-btns { display: flex; flex-direction: column; gap: 15px; align-items: center; margin-top: 20px; }
-        #msgBtn, #vidBtn { display: none; background-color: #d81b60; color: white; animation: bounce 2s infinite; width: 250px; }
+        #msgBtn, #vidBtn { display: none; background-color: #d81b60; color: white; animation: bounce 2s infinite; width: 260px; }
         #vidBtn { background-color: #333; animation-delay: 0.5s; }
 
         /* Overlays */
         .overlay {
             display: none; position: fixed; top: 0; left: 0;
-            width: 100%; height: 100%; background: rgba(0,0,0,0.9);
+            width: 100%; height: 100%; background: rgba(0,0,0,0.7);
             z-index: 200; justify-content: center; align-items: center;
         }
 
-        #messageBox {
-            width: 90%; max-width: 500px; max-height: 80vh;
+        #messageBox, #videoBox {
+            width: 92%; max-width: 500px; max-height: 85vh;
             background: white; padding: 25px; border-radius: 20px;
-            overflow-y: auto; text-align: left; position: relative;
+            overflow-y: auto; position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
 
-        /* Video Container */
-        #videoContainer { width: 95%; max-width: 800px; position: relative; }
-        video { width: 100%; border-radius: 10px; box-shadow: 0 0 20px rgba(255,255,255,0.2); }
-        .close-vid { position: absolute; top: -45px; right: 0; color: white; background: none; border: 1px solid white; padding: 5px 15px; }
+        #videoBox { padding: 40px 10px 10px 10px; background: #000; }
+        iframe { width: 100%; height: 300px; border: none; border-radius: 10px; }
+
+        .close-btn { position: absolute; top: 10px; right: 10px; padding: 5px 15px; background: #eee; border-radius: 10px; font-weight: bold; }
+        .close-vid { top: 5px; right: 5px; background: #333; color: #fff; }
 
         .cloud { position: absolute; background: white; width: 100px; height: 35px; border-radius: 50px; z-index: 1; pointer-events: none; }
         .cloud::after, .cloud::before { content: ''; position: absolute; background: inherit; width: 50px; height: 50px; border-radius: 50%; top: -20px; left: 15px; }
@@ -131,20 +133,28 @@
 
     <div class="overlay" id="msgOverlay">
         <div id="messageBox">
+            <button class="close-btn" id="closeMsg">X</button>
             <h3 style="text-align: center; color: #d81b60;">My Dearest Zuma... ❤️</h3>
-            <p>If there’s one thing I wish you could see...</p>
+            <p>If there’s one thing I wish you could see, it’s what goes on inside me when it comes to you because I don’t think I say it enough, or show it the way you deserve.🙄</p>
+            <p>You’re there more than you think. In the middle of my day, in the quiet moments, on my way to work, before I sleep, even when I’m surrounded by everything else, a part of me is always thinking about you.🌚</p>
+            <p>And I know sometimes I go quiet, or I don’t find the right words, and it might make you feel unsure bas el 7a2ee2a en that silence never means distance. If anything, it means there’s more inside me than I can easily say.👩🏽‍🤝‍🧑🏻 </p>
+            <p>You didn’t just become someone I love you became a part of how I see my life. A part of what I look forward to. A part of what makes things feel right. A part I wasn’t even searching for that, but somehow I found it with you. It just feels like a part of me was always meant to find you. ✨</p>
+            <p>I just wanted you to know that I truly love you. I love every thing about you.❤️ And I want to be clear about something… 
+            If this day matters to you, then it matters to me. 
+            Not because it’s just a date, but because it’s yours. 
+            And you are someone very special and important in my life. 
+            You are one of the best things that ever happened to me, and I don’t take that for granted, and I hope you know that in your heart.💞</p>
+            <p>I love being with you in the small moments, the random talks, the silence, the laughs, everything just feels better with you in it. And honestly, when I think about what’s coming I don’t just see days passing. I see a life, one that I want you to be a part of. And Maybe One Day🌚, building something real together, a home, a family and everything in between. 🏡❤️</p>
+            <p>I’m really lucky to have you and to be able to call you my girl.❤️</p>
             <p>Happy birthday ya Habebt Alby ❤️🎂</p>
-            <button id="closeMsg" style="display:block; margin: 20px auto; background:#ffb6c1; color:white; width: 100%;">Close with Love</button>
+            <p>I hope this year gives you the happiness, peace, and everything your heart is looking for because you deserve it.💘✨</p>
         </div>
     </div>
 
     <div class="overlay" id="vidOverlay">
-        <div id="videoContainer">
-            <button class="close-vid" id="closeVid">Close X</button>
-            <video id="bdVideo" controls>
-                <source src="your-video-file.mp4" type="video/mp4">
-                Your browser does not support the video tag.
-            </video>
+        <div id="videoBox">
+            <button class="close-btn close-vid" id="closeVid">Close X</button>
+            <iframe src="https://drive.google.com/file/d/1UZY_-r3J2yxl-BOx8qHuNAXtwRLnsw-6/preview" allow="autoplay"></iframe>
         </div>
     </div>
 
@@ -155,74 +165,73 @@
         const vidBtn = document.getElementById('vidBtn');
         const msgOverlay = document.getElementById('msgOverlay');
         const vidOverlay = document.getElementById('vidOverlay');
-        const bdVideo = document.getElementById('bdVideo');
         const closeMsg = document.getElementById('closeMsg');
         const closeVid = document.getElementById('closeVid');
-        
         const romanticMusic = document.getElementById('romanticMusic');
         const noMusic = document.getElementById('noMusic');
         const yesMusic = document.getElementById('yesMusic');
 
-        let noCount = 0;
-        let scale = 1;
+        let noCount = 0; let scale = 1;
 
-        // ... (Keep Star and Cloud animation code the same as your previous version) ...
+        // Init Stars
+        const canvas = document.getElementById('star-canvas');
+        const ctx = canvas.getContext('2d');
+        function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+        window.addEventListener('resize', resize); resize();
+        let stars = [];
+        for(let i=0; i<60; i++) stars.push({ x: Math.random()*canvas.width, y: Math.random()*canvas.height, size: Math.random()*2, color: ['#000000', '#FFFF00', '#008000', '#0000FF', '#FF00FF', '#FFA500'][Math.floor(Math.random()*6)], speed: Math.random()*0.5 });
+        function animateStars() { ctx.clearRect(0,0,canvas.width, canvas.height); stars.forEach(s => { ctx.fillStyle=s.color; ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill(); s.y+=s.speed; if(s.y>canvas.height) s.y=0; }); requestAnimationFrame(animateStars); }
+        animateStars();
 
-        function pauseAllMusic() {
-            romanticMusic.pause();
-            noMusic.pause();
-            yesMusic.pause();
+        // Clouds
+        function createCloud(isDark = false) {
+            let cloud = document.createElement('div');
+            cloud.className = 'cloud';
+            cloud.style.top = (Math.random() * 30) + '%';
+            cloud.style.backgroundColor = isDark ? "#888" : "white";
+            cloud.style.animation = `moveClouds ${Math.random() * 10 + 15}s linear infinite`;
+            document.body.appendChild(cloud);
         }
+        for (let i = 0; i < 4; i++) createCloud();
+
+        // Music Control
+        window.addEventListener('click', () => { if(noCount === 0 && finalContent.style.display === 'none') romanticMusic.play().catch(()=>{}); }, {once: true});
+
+        function pauseMusic() { romanticMusic.pause(); noMusic.pause(); yesMusic.pause(); }
 
         noBtn.addEventListener('click', () => {
-            noCount++;
-            pauseAllMusic();
-            noMusic.play().catch(()=>{});
-            // ... (Keep existing No button logic) ...
+            noCount++; pauseMusic(); noMusic.play().catch(()=>{});
+            document.body.style.backgroundColor = "#444";
+            document.querySelectorAll('.cloud').forEach(c => c.style.backgroundColor = "#888");
+            if(noCount === 1) noBtn.innerText = "Are you sure?😕";
             noBtn.style.position = 'fixed';
             noBtn.style.left = Math.random() * (window.innerWidth - 100) + 'px';
             noBtn.style.top = Math.random() * (window.innerHeight - 100) + 'px';
-            scale += 0.45;
-            yesBtn.style.transform = `scale(${scale})`;
+            scale += 0.3; yesBtn.style.transform = `scale(${scale})`;
         });
 
         yesBtn.addEventListener('click', () => {
-            pauseAllMusic();
-            yesMusic.play().catch(()=>{});
+            pauseMusic(); yesMusic.play().catch(()=>{});
+            document.body.style.backgroundColor = "#ffe4e1";
             document.getElementById('btnContainer').style.display = 'none';
             document.getElementById('question').style.display = 'none';
             document.getElementById('finalContent').style.display = 'block';
-            msgBtn.style.display = 'block';
-            vidBtn.style.display = 'block';
-            setInterval(updateCountdown, 1000);
+            msgBtn.style.display = 'inline-block'; vidBtn.style.display = 'inline-block';
+            setInterval(updateCountdown, 1000); updateCountdown();
+            setInterval(() => {
+                const heart = document.createElement('div'); heart.className = 'heart-float';
+                heart.innerText = ['💘','♥','💖'][Math.floor(Math.random()*3)];
+                heart.style.left = Math.random() * 100 + 'vw'; document.body.appendChild(heart);
+                setTimeout(() => heart.remove(), 4000);
+            }, 300);
             confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
         });
 
-        // Message Box Logic
-        msgBtn.addEventListener('click', () => { 
-            msgOverlay.style.display = 'flex'; 
-            document.body.classList.add('modal-open');
-        });
-        closeMsg.addEventListener('click', () => { 
-            msgOverlay.style.display = 'none'; 
-            document.body.classList.remove('modal-open');
-        });
-
-        // Video Box Logic
-        vidBtn.addEventListener('click', () => {
-            pauseAllMusic(); // Stops the "Yes" song so she can hear the video
-            vidOverlay.style.display = 'flex';
-            bdVideo.play();
-            document.body.classList.add('modal-open');
-        });
-
-        closeVid.addEventListener('click', () => {
-            bdVideo.pause();
-            bdVideo.currentTime = 0;
-            vidOverlay.style.display = 'none';
-            document.body.classList.remove('modal-open');
-            yesMusic.play(); // Optional: resume music after video
-        });
+        msgBtn.addEventListener('click', () => { msgOverlay.style.display = 'flex'; document.body.classList.add('modal-open'); });
+        closeMsg.addEventListener('click', () => { msgOverlay.style.display = 'none'; document.body.classList.remove('modal-open'); });
+        
+        vidBtn.addEventListener('click', () => { pauseMusic(); vidOverlay.style.display = 'flex'; document.body.classList.add('modal-open'); });
+        closeVid.addEventListener('click', () => { vidOverlay.style.display = 'none'; document.body.classList.remove('modal-open'); yesMusic.play(); });
 
         function updateCountdown() {
             const target = new Date("March 28, 2026 19:00:00").getTime();
